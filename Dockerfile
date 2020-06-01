@@ -1,6 +1,5 @@
 FROM ubuntu:latest as build
 
-ARG SHORT_VERSION="0.1"
 ARG DEBIAN_FRONTEND="noninteractive"
 
 RUN apt-get update -y && apt-get install -y --no-install-recommends \
@@ -30,9 +29,5 @@ RUN gst-inspect-1.0 webserverbin
 
 FROM ubuntu:latest
 
-COPY --from=build \
-    /usr/lib/x86_64-linux-gnu/gstreamer-1.0/libgstweb.so \
-    /usr/include/gstweb.h \
-    /usr/share/vala/vapi/gstweb-${SHORT_VERSION}.vapi \
-    /usr/share/gir-1.0/gstweb-${SHORT_VERSION}.gir \
-    /
+# TODO(mdegans): use build script to read from VERSION and fill this out
+ARG SHORT_VERSION="0.1"
