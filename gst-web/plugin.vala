@@ -23,8 +23,8 @@
  */
 
 
-// ignore any squigglies here. Meson will format this with configure_file
-// found in this folder's meson.build
+// ignore any squigglies here. Meson will format this template
+// with configure_file (see this folder's meson.build)
 const Gst.PluginDesc gst_plugin_desc = {
 	@gst_major_version@, @gst_minor_version@, 
 	"@project_name@", 
@@ -47,6 +47,30 @@ public static bool plugin_init(Gst.Plugin p) {
 	return true;
 }
 
+// warning: Namespace Web does not have a GIR namespace and version annotation
+// NOTE(mdegans): The above warning is because these attributes are omitted,
+//  but if they are added, the naming in the header and gir ends up messed.
+//
+//  This is inconsistent with other package, but seems to make a prettier interface.
+//
+// documentation:
+//
+//  https://wiki.gnome.org/Projects/Vala/Manual/Attributes
+//  ... and ... 
+//  fgrep to the rescue!
+//  ...
+//  gstreamer-player-1.0.vapi:[CCode (cprefix = "Gst", gir_namespace = "GstPlayer", gir_version = "1.0", lower_case_cprefix = "gst_")]
+//  gstreamer-riff-1.0.vapi:[CCode (cprefix = "Gst", gir_namespace = "GstRiff", gir_version = "1.0", lower_case_cprefix = "gst_")]
+//  gstreamer-rtp-1.0.vapi:[CCode (cprefix = "Gst", gir_namespace = "GstRtp", gir_version = "1.0", lower_case_cprefix = "gst_")]
+//  gstreamer-rtsp-1.0.vapi:[CCode (cprefix = "Gst", gir_namespace = "GstRtsp", gir_version = "1.0", lower_case_cprefix = "gst_")]
+//  gstreamer-rtsp-server-1.0.vapi:[CCode (cprefix = "Gst", gir_namespace = "GstRtspServer", gir_version = "1.0", lower_case_cprefix = "gst_")]
+//  ...
+//  Uncomment, regenerate with ninja, and see what i mean in the gstweb.h and gstweb-@version@.gir
+//  [CCode (cprefix = "Gst", gir_namespace = "GstWeb", gir_version = "@version@", lower_case_cprefix="gst_")]
 namespace Gst.Web {
-	//foo
+
+// plugin global constants
+const string DEFAULT_NGINX_BIN = "@nginx_bin@";
+const string DEFAULT_NGINX_CONF = "@nginx_conf@";
+
 }
