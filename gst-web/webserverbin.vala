@@ -105,7 +105,7 @@ image/x-jpc, profile = (int)[0, 49151];""";
 	public string nginx_config { get; set; default = Gst.Web.DEFAULT_NGINX_CONF; }
 
 	// constructor
-	public ServerBin(string? name=null) throws Error {
+	public ServerBin(string? name=null) {
 		if (name != null){
 			this.name = name;
 		}
