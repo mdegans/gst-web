@@ -31,3 +31,7 @@ FROM ubuntu:latest
 
 # TODO(mdegans): use build script to read from VERSION and fill this out
 ARG SHORT_VERSION="0.1"
+COPY --from=build /usr/lib/x86_64-linux-gnu/gstreamer-1.0/libgstweb.so /usr/lib/x86_64-linux-gnu/gstreamer-1.0/libgstweb.so
+COPY --from=build /usr/include/gstweb.h /usr/include/gstweb.h
+COPY --from=build /usr/share/vala/vapi/gstweb-${SHORT_VERSION}.vapi /usr/share/vala/vapi/gstweb-${SHORT_VERSION}.vapi
+COPY --from=build /usr/share/gir-1.0/gstweb-${SHORT_VERSION}.gir /usr/share/gir-1.0/gstweb-${SHORT_VERSION}.gir
