@@ -19,3 +19,4 @@ project_url = 'https://github.com/mdegans/gst-web'
 plugins_install_dir = join_paths(get_option('libdir'), 'gstreamer-1.0')
 
 subdir('gst-web')
+subdir('test')

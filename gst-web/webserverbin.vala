@@ -29,7 +29,7 @@ public class ServerBin: Gst.Bin {
 	/**
 	 * The sink caps string. Copied directly from mpegtsmux.
 	 */
-	const string SINK_CAPS_STR = """video/mpeg, 
+	public const string SINK_CAPS_STR = """video/mpeg, 
 mpegversion = (int) { 1, 2, 4 }, 
 parsed = (boolean) TRUE, 
 systemstream = (boolean) false; 
