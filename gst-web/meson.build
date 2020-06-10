@@ -6,6 +6,7 @@ gst_web_deps = [
   dependency('gio-2.0'),
   dependency('glib-2.0'),
   dependency('gstreamer-video-1.0'),
+  dependency('template-glib-1.0'),
   meson.get_compiler('vala').find_library('posix'),
 ]
 nginx = find_program('nginx', required: true)
@@ -26,8 +27,8 @@ plugin_vala = configure_file(
   'package_name': package_name,
   'origin': origin,
   # global constants:
-  'nginx_bin': nginx.path(),
   'nginx_conf': 'nginx.conf',
+  'prefix': get_option('prefix'),
   }
 )
 

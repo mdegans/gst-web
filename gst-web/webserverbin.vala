@@ -26,6 +26,7 @@ namespace Gst.Web {
 public class ServerBin: Gst.Bin {
 	// TODO(mdegans): see if there is a way to copy this from mpegtsmux directly
 	//  but this is static so I kind of doubt it.
+	// TODO(mdegans): prune stuff that isn't supported by HLS.
 	/**
 	 * The sink caps string. Copied directly from mpegtsmux.
 	 */
@@ -91,18 +92,84 @@ image/x-jpc, profile = (int)[0, 49151];""";
 	 * Nginx Subprocess.
 	 */
 	protected Subprocess? server;
+	/**
+	 * the transport stream muxer.
+	 */
 	public Gst.Element mpegtsmux;
+	/**
+	 * The HLS sink (a kind of multifilesink).
+	 */
 	public Gst.Element hlssink;
+
+	/* Properties:
+	 */
+
+	[Description(
+		nick = "web temp path",
+		blurb = "Temporary path used to serve file from.")]
+	public string? web_tmp { get; default = null; }
 
 	[Description(
 		nick = "nginx executable",
 		blurb = "The full path to an nginx binary.")]
-	public string nginx_exe { get; set; default = Gst.Web.DEFAULT_NGINX_BIN; }
+	public string? nginx_exe {
+		get;
+		set;
+		default = Environment.find_program_in_path("nginx");
+	}
 
 	[Description(
-		nick = "nginx config file",
-		blurb = "The full path to an nginx config file.")]
+		nick = "nginx config template",
+		blurb = "The full path to an nginx.config template.")]
 	public string nginx_config { get; set; default = Gst.Web.DEFAULT_NGINX_CONF; }
+
+	[Description(
+		nick = "html title",
+		blurb = "Contents of the html title tag.")]
+	public string title { get; set; default = Gst.Web.DEFAULT_TITLE; }
+
+	[Description(
+		nick = "poster image",
+		blurb = "Relative path (with web root) to poster image. Change only if you hate doggos.")]
+	public string poster { get; set; default = Gst.Web.DEFAULT_POSTER; }
+
+	[Description(
+		nick = "web root source",
+		blurb = "The web root to *copy* from (to /tmp/gst-web...).")]
+	public string web_root_source { get; set; default = Gst.Web.DEFAULT_WEB_ROOT; }
+
+	[Description(
+		nick = "port",
+		blurb = "Port to serve http on.")]
+	public int port { get; set; default = Gst.Web.DEFAULT_PORT; }
+
+	[Description(
+		nick = "hostname",
+		blurb = "Hostname to use (defaults to real hostname).")]
+	public string hostname { get; set; default = Environment.get_host_name(); }
+
+	[Description(
+		nick = "public web uri",
+		blurb = "The web root's publicly accessable uri.")]
+	public string web_uri {
+		owned get {
+			return @"http://$(this.hostname):$(this.port)/";
+		}
+	}
+
+	[Description(
+		nick = "video root",
+		blurb = "The active video root.")]
+	public string? video_root {
+		 owned get {
+			 if (this.web_tmp == null) {
+					// TODO(mdegans) test what happens if you give build_filename
+					// null as a first parameter
+					return null;
+			 }
+			 return Path.build_filename(this.web_tmp, Gst.Web.VIDEO_SUBDIR);
+		 }
+	}
 
 	// constructor
 	public ServerBin(string? name=null) {
@@ -243,6 +310,62 @@ image/x-jpc, profile = (int)[0, 49151];""";
 	public virtual void reload_config() {
 		if (this.server != null) {
 			this.server.send_signal(Posix.Signal.HUP);
+		}
+	}
+
+	/**
+	 * Prep real web root by copying this.web_root to a new,
+	 * unique, private, mode 700 folder under /tmp
+	 */
+	protected virtual void prep_web_root() throws Error {
+		// create a tempdir if it doesn't exist
+		this.cleanup_web_tmp();
+		this._web_tmp = DirUtils.make_tmp("gst-web");
+		// copy web root to the tmpdir
+		var src = File.new_for_path(this.web_root_source);
+		var dst = File.new_for_path(this.web_tmp);
+		copy_recursive(src, dst);
+	}
+
+	/**
+	 * Cleanup /tmp/gst-web...
+	 */
+	protected virtual void cleanup_web_tmp() throws Error {
+		if (this.web_tmp == null) {
+			return;
+		}
+		// sanity check (we're doing a rm -rf here), so let's make
+		// sure web_tmp.startswith("/tmp")
+		if (this.web_tmp.has_prefix(Environment.get_tmp_dir())) {
+			// glib has no recursive delete, so we'll use Subprocess
+			// TODO(mdegans): keep a set of files during copy_recursive
+			// and just delete those as it's safer (but there are .ts
+			// files and the plalist to consider too. this is where
+			// python can be more concise.
+			string[] command = {"rm", "-rf", this.web_tmp, null};
+			try {
+				var rm_process = new Subprocess.newv(
+					command, SubprocessFlags.STDOUT_SILENCE);
+				rm_process.wait_check_async.begin(null, (_, async_result) => {
+					try {
+						// get the async result of the operation
+						bool success = this.server.wait_check_async.end(async_result);
+						// if the rm, failed
+						if (!success) {
+							// post a FAILED message on the bus
+							var err = new Gst.CoreError.FAILED(
+								@"rm -rf of $(this.web_tmp) failed");
+							message_full_failed(this, err, "cleanup fail");
+						}
+					} catch (Error err) {
+						// post a FAILED message on the bus
+						message_full_failed(this, err, "cleanup fail");
+					}
+				});
+			} catch (Error err) {
+				// forward error message to the bus
+				message_full_failed(this, err, "cleanup fail");
+			}
 		}
 	}
 }

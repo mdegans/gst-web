@@ -4,10 +4,11 @@ ARG DEBIAN_FRONTEND="noninteractive"
 
 RUN apt-get update -y && apt-get install -y --no-install-recommends \
         build-essential \ 
-        gobject-introspection \
         gstreamer1.0-tools \
-        libgstreamer1.0-dev \
+        libgirepository1.0-dev \
         libgstreamer-plugins-base1.0-dev \
+        libgstreamer1.0-dev \
+        libtemplate-glib-1.0-dev \
         meson \
         nginx \
         valac \
@@ -17,8 +18,9 @@ WORKDIR /tmp/build
 
 COPY meson.build VERSION ./
 COPY gst-web ./gst-web/
+COPY test ./test/
 
-RUN mkdir build && cd build \
+RUN mkdir builddir && cd builddir \
     && meson .. --prefix=/usr \
     && ninja install
 

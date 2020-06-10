@@ -69,8 +69,16 @@ public static bool plugin_init(Gst.Plugin p) {
 //  [CCode (cprefix = "Gst", gir_namespace = "GstWeb", gir_version = "@version@", lower_case_cprefix="gst_")]
 namespace Gst.Web {
 
-// plugin global constants
-const string DEFAULT_NGINX_BIN = "@nginx_bin@";
-const string DEFAULT_NGINX_CONF = "@nginx_conf@";
+// public plugin global constants
+public const string DEFAULT_NGINX_CONF = "@nginx_conf@";
+public const string PREFIX = "@prefix@";
 
+// template stuff
+public const string DEFAULT_TITLE = "GstWeb Player";
+public const string DEFAULT_POSTER = "poster.jpg";
+public const string DEFAULT_WEB_ROOT = PREFIX + "/share/gst-web/www";
+public const int DEFAULT_PORT = 8080;
+public const string VIDEO_SUBDIR = "video";
+public const string VIDEO_FILENAMES = "segment%05d.ts";
+public const string PLAYLIST_FILENAME = "playlist.m3u8";
 }
